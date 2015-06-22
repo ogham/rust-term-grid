@@ -2,6 +2,13 @@
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
 
+#![forbid(missing_copy_implementations)]
+#![forbid(missing_debug_implementations)]
+#![forbid(missing_docs)]
+
+//! This is a library for formatting strings in a grid layout, for a terminal
+//! or anywhere that uses a fixed-width font.
+
 use std::cmp::max;
 use std::convert;
 use std::iter::repeat;
@@ -10,8 +17,18 @@ extern crate unicode_width;
 use unicode_width::UnicodeWidthStr;
 
 
+/// A **Cell** is the combination of a string and its pre-computed length.
+///
+/// The easiest way to create a Cell is just by using `string.into()`, which
+/// uses the **unicode width** of the string (see the `unicode_width` crate).
+/// However, the fields are public, if you wish to provide your own length.
+#[derive(PartialEq, Debug)]
 pub struct Cell {
+
+    /// The string to display when this cell gets rendered.
     pub contents: String,
+
+    /// The pre-computed length of the string.
     pub width: Width,
 }
 
@@ -24,22 +41,51 @@ impl convert::From<String> for Cell {
     }
 }
 
+
+/// Direction cells should be written in - either across, or downwards.
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Direction {
+
+    /// Starts at the top left and moves rightwards, going back to the first
+    /// column for a new row - like a typewriter.
     LeftToRight,
+
+    /// Starts at the top left and moves downwards, going back to the first
+    /// row for a new column - like how `ls` lists files by default.
     TopToBottom,
 }
 
 
+/// The width of a cell, in columns.
 pub type Width = usize;
 
+
+/// The user-assignable options for a grid view that should be passed into
+/// `Grid::new()`.
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub struct GridOptions {
+
+    /// Direction that the cells should be written in - either across, or
+    /// downwards.
     pub direction:       Direction,
+
+    /// Number of spaces to put in between each column of cells.
     pub separator_width: Width,
+
+    /// The maximum width one row can be before it wraps.
     pub maximum_width:   Width,
 }
 
 impl GridOptions {
+
+    /// Attempts to fit the list of cells into a grid using the fewest number
+    /// of lines possible, returning the `Dimensions` of the resulting grid.
+    ///
+    /// Returns `None` if the cells can't actually fit in a grid of that width
+    /// - meaning that the longest cell is actually bigger than the available
+    /// width!
     fn fit_into_grid(&self, cells: &[Cell]) -> Option<Dimensions> {
+
         // TODO: this function could almost certainly be optimised...
         // surely not *all* of the numbers of lines are worth searching through!
 
@@ -90,22 +136,40 @@ impl GridOptions {
             }
         }
 
-        // If you get here you have really long file names.
+        // If you get here you have really wide cells.
         return None;
     }
 }
 
-pub struct Grid {
-    options: GridOptions,
-    cells: Vec<Cell>,
-}
 
+#[derive(PartialEq, Debug)]
 struct Dimensions {
+
+    /// The number of lines in the grid.
     num_lines: Width,
+
+    /// The width of each column in the grid. The length of this vector serves
+    /// as the number of columns.
     widths: Vec<Width>,
 }
 
+
+/// Everything needed to format the cells with the grid options.
+///
+/// For more information, see the module-level documentation.
+#[derive(PartialEq, Debug)]
+pub struct Grid {
+
+    /// Options used in constructing the grid.
+    options: GridOptions,
+
+    /// Vector of cells
+    cells: Vec<Cell>,
+}
+
 impl Grid {
+
+    /// Creates a new grid view with the given options.
     pub fn new(options: GridOptions) -> Grid {
         Grid {
             options: options,
@@ -113,14 +177,18 @@ impl Grid {
         }
     }
 
+    /// Reserves space in the vector for the given number of additional cells
+    /// to be added. (See `vec#reserve`)
     pub fn reserve(&mut self, additional: usize) {
         self.cells.reserve(additional)
     }
 
+    /// Adds another cell onto the vector.
     pub fn add(&mut self, cell: Cell) {
         self.cells.push(cell)
     }
 
+    /// Writes all the cells to standard output.
     pub fn write(&self) {
         if let Some(dimensions) = self.options.fit_into_grid(&self.cells[..]) {
             for y in 0 .. dimensions.num_lines {
@@ -165,9 +233,7 @@ fn spaces(length: usize) -> String {
 /// Pad a string with the given alignment and number of spaces.
 ///
 /// This doesn't take the width the string *should* be, rather the number
-/// of spaces to add: this is because the strings are usually full of
-/// invisible control characters, so getting the displayed width of the
-/// string is not as simple as just getting its length.
+/// of spaces to add.
 fn pad_string(string: &str, padding: usize) -> String {
     format!("{}{}", string, spaces(padding))
 }
