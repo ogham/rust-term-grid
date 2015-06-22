@@ -20,13 +20,18 @@ impl convert::From<String> for Cell {
     }
 }
 
+pub enum Direction {
+    LeftToRight,
+    TopToBottom,
+}
+
 
 pub type Width = usize;
 
 pub struct GridOptions {
-    pub across: bool,
+    pub direction:       Direction,
     pub separator_width: Width,
-    pub maximum_width: Width,
+    pub maximum_width:   Width,
 }
 
 impl GridOptions {
@@ -65,11 +70,9 @@ impl GridOptions {
             // names in that column up.
             let mut column_widths: Vec<Width> = repeat(0).take(num_columns).collect();
             for (index, cell) in cells.iter().enumerate() {
-                let index = if self.across {
-                    index % num_columns
-                }
-                else {
-                    index / num_lines
+                let index = match self.direction {
+                    Direction::LeftToRight  => index % num_columns,
+                    Direction::TopToBottom  => index / num_lines,
                 };
                 column_widths[index] = max(column_widths[index], cell.width);
             }
@@ -118,11 +121,9 @@ impl Grid {
         if let Some(dimensions) = self.options.fit_into_grid(&self.cells[..]) {
             for y in 0 .. dimensions.num_lines {
                 for x in 0 .. dimensions.widths.len() {
-                    let num = if self.options.across {
-                        y * dimensions.widths.len() + x
-                    }
-                    else {
-                        y + dimensions.num_lines * x
+                    let num = match self.options.direction {
+                        Direction::LeftToRight   => y * dimensions.widths.len() + x,
+                        Direction::TopToBottom   => y + dimensions.num_lines * x,
                     };
 
                     // Show whitespace in the place of trailing files
