@@ -130,7 +130,11 @@ impl Grid {
     }
 
     fn columns_dimensions(&self, num_columns: usize) -> Dimensions {
-        let num_lines = self.cells.len() / num_columns;
+        let mut num_lines = self.cells.len() / num_columns;
+        if self.cells.len() % num_columns != 0 {
+            num_lines += 1;
+        }
+
         self.column_widths(num_lines, num_columns)
     }
 
