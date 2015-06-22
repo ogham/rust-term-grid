@@ -1,3 +1,7 @@
+#![crate_name = "term_grid"]
+#![crate_type = "rlib"]
+#![crate_type = "dylib"]
+
 use std::cmp::max;
 use std::convert;
 use std::iter::repeat;

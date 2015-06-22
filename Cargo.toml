@@ -1,5 +1,5 @@
 [package]
-name = "term-grid"
+name = "term_grid"
 version = "0.1.0"
 authors = ["Ben S <ogham@bsago.me>"]
 
