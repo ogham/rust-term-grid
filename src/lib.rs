@@ -2,9 +2,9 @@
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
 
-#![forbid(missing_copy_implementations)]
-#![forbid(missing_debug_implementations)]
-#![forbid(missing_docs)]
+#![warn(missing_copy_implementations)]
+#![warn(missing_debug_implementations)]
+#![warn(missing_docs)]
 
 //! This is a library for formatting strings in a grid layout, for a terminal
 //! or anywhere that uses a fixed-width font.
