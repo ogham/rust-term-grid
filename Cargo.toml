@@ -1,0 +1,7 @@
+[package]
+name = "term-grid"
+version = "0.1.0"
+authors = ["Ben S <ogham@bsago.me>"]
+
+[dependencies]
+unicode-width = "*"
