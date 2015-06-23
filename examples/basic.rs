@@ -11,5 +11,10 @@ fn main() {
         grid.add(format!("{}", 2_isize.pow(i)).into())
     }
 
-    println!("{}", grid.fit_into_width(40).unwrap());
+    if let Some(grid_display) = grid.fit_into_width(40) {
+        println!("{}", grid_display);
+    }
+    else {
+        println!("Couldn't fit grid into 40 columns!");
+    }
 }
