@@ -1,7 +1,16 @@
 [package]
 name = "term_grid"
-version = "0.1.0"
+description = "Library for formatting strings into a grid layout"
+
 authors = ["Ben S <ogham@bsago.me>"]
+documentation = "http://bsago.me/doc/term_grid/"
+homepage = "https://github.com/ogham/rust-term-grid"
+license = "MIT"
+readme = "README.md"
+version = "0.1.0"
+
+[lib]
+name = "term_grid"
 
 [dependencies]
 unicode-width = "*"

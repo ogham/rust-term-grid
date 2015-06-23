@@ -8,7 +8,9 @@
 
 //! ## Introduction
 //!
-//! This library arranges textual data in a grid format suitable for fixed-width fonts, using an algorithm to minimise the amount of space needed. For example:
+//! This library arranges textual data in a grid format suitable for
+//! fixed-width fonts, using an algorithm to minimise the amount of space
+//! needed. For example:
 //!
 //! ```rust
 //! let mut grid = Grid::new(GridOptions {
