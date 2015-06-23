@@ -13,6 +13,8 @@
 //! needed. For example:
 //!
 //! ```rust
+//! use term_grid::{Grid, GridOptions, Direction};
+//!
 //! let mut grid = Grid::new(GridOptions {
 //!     separator_width: 1,
 //!     direction: Direction::LeftToRight,
@@ -28,9 +30,11 @@
 //!
 //! Produces the following tabular result:
 //!
-//!     one  two three  four
-//!     five six seven  eight
-//!     nine ten eleven twelve
+//! ```text
+//! one  two three  four
+//! five six seven  eight
+//! nine ten eleven twelve
+//! ```
 //!
 //!
 //! ## Creating a Grid
@@ -116,6 +120,15 @@ impl convert::From<String> for Cell {
         Cell {
             width: UnicodeWidthStr::width(&*string),
             contents: string,
+        }
+    }
+}
+
+impl<'_> convert::From<&'_ str> for Cell {
+    fn from(string: &'_ str) -> Self {
+        Cell {
+            width: UnicodeWidthStr::width(&*string),
+            contents: string.into(),
         }
     }
 }
