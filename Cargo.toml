@@ -7,7 +7,7 @@ documentation = "http://bsago.me/doc/term_grid/"
 homepage = "https://github.com/ogham/rust-term-grid"
 license = "MIT"
 readme = "README.md"
-version = "0.1.0"
+version = "0.1.1"
 
 [lib]
 name = "term_grid"

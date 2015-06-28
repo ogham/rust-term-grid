@@ -177,6 +177,12 @@ struct Dimensions {
     widths: Vec<Width>,
 }
 
+impl Dimensions {
+    pub fn total_width(&self, separator_width: Width) -> Width {
+        sum(self.widths.iter().map(|&x| x)) + separator_width * (self.widths.len() - 1)
+    }
+}
+
 
 /// Everything needed to format the cells with the grid options.
 ///
@@ -300,6 +306,26 @@ impl Grid {
 pub struct Display<'grid> {
     grid: &'grid Grid,
     dimensions: Dimensions,
+}
+
+impl<'grid> Display<'grid> {
+
+    /// Returns how many columns this display takes up, based on the separator
+    /// width and the number and width of the columns.
+    pub fn width(&self) -> Width {
+        self.dimensions.total_width(self.grid.options.separator_width)
+    }
+
+    /// Returns whether this display takes up as many columns as were allotted
+    /// to it.
+    ///
+    /// It's possible to construct tables that don't actually use up all the
+    /// columns that they could, such as when there are more columns than
+    /// cells! In this case, a column would have a width of zero. This just
+    /// checks for that.
+    pub fn is_complete(&self) -> bool {
+        self.dimensions.widths.iter().all(|&x| x > 0)
+    }
 }
 
 impl<'grid> fmt::Display for Display<'grid> {
