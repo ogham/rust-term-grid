@@ -13,11 +13,11 @@
 //! needed. For example:
 //!
 //! ```rust
-//! use term_grid::{Grid, GridOptions, Direction};
+//! use term_grid::{Grid, GridOptions, Direction, Filling};
 //!
 //! let mut grid = Grid::new(GridOptions {
-//!     separator_width: 1,
-//!     direction: Direction::LeftToRight,
+//!     filling:    Filling::Spaces(2),
+//!     direction:  Direction::LeftToRight,
 //! });
 //!
 //! for s in vec!["one", "two", "three", "four", "five", "six", "seven",
@@ -39,22 +39,22 @@
 //!
 //! ## Creating a Grid
 //!
-//! To add data to a grid, first create a new `Grid` object, and then add cells to
-//! them with the `add` method.
+//! To add data to a grid, first create a new `Grid` object, and then add
+//! cells to them with the `add` method.
 //!
-//! There are two options that must be specified in the `GridOptions` object that
-//! dictate how the grid is formatted:
+//! There are two options that must be specified in the `GridOptions` object
+//! that dictate how the grid is formatted:
 //!
-//! - `separator_width`: the number of space characters to be placed between two
-//!   columns;
+//! - `filling`: what to put in between two columns - either a number of
+//!    spaces, or a text string;
 //! - `direction`, which specifies whether the cells should go along
-//!   rows, or columns:
+//!    rows, or columns:
 //!   - `Direction::LeftToRight` starts them in the top left and
-//!     moves *rightwards*, going to the start of a new row after reaching the
-//!     final column;
+//!      moves *rightwards*, going to the start of a new row after reaching the
+//!      final column;
 //!   - `Direction::TopToBottom` starts them in the top left and moves
-//!     *downwards*, going to the top of a new column after reaching the final
-//!     row.
+//!      *downwards*, going to the top of a new column after reaching the final
+//!      row.
 //!
 //!
 //! ## Displaying a Grid
@@ -152,9 +152,29 @@ pub enum Direction {
 pub type Width = usize;
 
 
+/// The text to put in between each pair of columns.
+#[derive(PartialEq, Debug)]
+pub enum Filling {
+
+    /// A certain number of spaces.
+    Spaces(Width),
+
+    /// The same string, every time.
+    Text(String),
+}
+
+impl Filling {
+    fn width(&self) -> Width {
+        match self {
+            &Filling::Spaces(w)  => w,
+            &Filling::Text(ref t)    => UnicodeWidthStr::width(&**t),
+        }
+    }
+}
+
 /// The user-assignable options for a grid view that should be passed into
 /// `Grid::new()`.
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(PartialEq, Debug)]
 pub struct GridOptions {
 
     /// Direction that the cells should be written in - either across, or
@@ -162,7 +182,7 @@ pub struct GridOptions {
     pub direction: Direction,
 
     /// Number of spaces to put in between each column of cells.
-    pub separator_width: Width,
+    pub filling: Filling,
 }
 
 
@@ -179,7 +199,7 @@ struct Dimensions {
 
 impl Dimensions {
     pub fn total_width(&self, separator_width: Width) -> Width {
-        sum(self.widths.iter().map(|&x| x)) + separator_width * (self.widths.len() - 1)
+        sum(self.widths.iter().cloned()) + separator_width * (self.widths.len() - 1)
     }
 }
 
@@ -282,7 +302,7 @@ impl Grid {
             // This is actually a necessary check, because the width is stored as
             // a usize, and making it go negative makes it huge instead, but it
             // also serves as a speed-up.
-            let total_separator_width = (num_columns - 1) * self.options.separator_width;
+            let total_separator_width = (num_columns - 1) * self.options.filling.width();
             if maximum_width < total_separator_width {
                 continue;
             }
@@ -313,7 +333,7 @@ impl<'grid> Display<'grid> {
     /// Returns how many columns this display takes up, based on the separator
     /// width and the number and width of the columns.
     pub fn width(&self) -> Width {
-        self.dimensions.total_width(self.grid.options.separator_width)
+        self.dimensions.total_width(self.grid.options.filling.width())
     }
 
     /// Returns whether this display takes up as many columns as were allotted
@@ -349,8 +369,16 @@ impl<'grid> fmt::Display for Display<'grid> {
                 }
                 else {
                     assert!(self.dimensions.widths[x] >= cell.width);
-                    let extra_spaces = self.dimensions.widths[x] - cell.width + self.grid.options.separator_width;
-                    try!(write!(f, "{}", pad_string(&cell.contents, extra_spaces)));
+                    match &self.grid.options.filling {
+                        &Filling::Spaces(n)  => {
+                            let extra_spaces = self.dimensions.widths[x] - cell.width + n;
+                            try!(write!(f, "{}", pad_string(&cell.contents, extra_spaces)));
+                        }
+                        &Filling::Text(ref t)    => {
+                            let extra_spaces = self.dimensions.widths[x] - cell.width;
+                            try!(write!(f, "{}{}", pad_string(&cell.contents, extra_spaces), t));
+                        }
+                    }
                 }
             }
             try!(write!(f, "\n"));

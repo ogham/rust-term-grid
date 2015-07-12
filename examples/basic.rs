@@ -1,10 +1,10 @@
 extern crate term_grid;
-use term_grid::{Grid, GridOptions, Direction};
+use term_grid::{Grid, GridOptions, Direction, Filling};
 
 fn main() {
     let mut grid = Grid::new(GridOptions {
-        direction:        Direction::TopToBottom,
-        separator_width:  2,
+        direction:  Direction::TopToBottom,
+        filling:    Filling::Spaces(2),
     });
 
     for i in 0..40 {
