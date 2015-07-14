@@ -16,7 +16,7 @@
 //! use term_grid::{Grid, GridOptions, Direction, Filling};
 //!
 //! let mut grid = Grid::new(GridOptions {
-//!     filling:    Filling::Spaces(2),
+//!     filling:    Filling::Spaces(1),
 //!     direction:  Direction::LeftToRight,
 //! });
 //!
