@@ -27,9 +27,11 @@ git = "https://github.com/ogham/rust-term-grid.git"
 This library arranges textual data in a grid format suitable for fixed-width fonts, using an algorithm to minimise the amount of space needed. For example:
 
 ```rust
+use term_grid::{Grid, GridOptions, Direction, Filling};
+
 let mut grid = Grid::new(GridOptions {
-    separator_width:  1,
-    direction:        Direction::LeftToRight,
+    filling:     Filling::Spaces(1),
+    direction:   Direction::LeftToRight,
 });
 
 for s in vec!["one", "two", "three", "four", "five", "six", "seven",
@@ -53,10 +55,10 @@ To add data to a grid, first create a new `Grid` object, and then add cells to t
 
 There are two options that must be specified in the `GridOptions` object that dictate how the grid is formatted:
 
-- `separator_width`: the number of space characters to be placed between two columns;
+- `filling`: what to put in between two columns - either a number of spaces, or a text string;
 - `direction`, which specifies whether the cells should go along rows, or columns:
-    - `Direction::LeftToRight` starts them in the top left and moves *rightwards*, going to the start of a new row after reaching the final column;
-    - `Direction::TopToBottom` starts them in the top left and moves *downwards*, going to the top of a new column after reaching the final row.
+  - `Direction::LeftToRight` starts them in the top left and moves *rightwards*, going to the start of a new row after reaching the final column;
+  - `Direction::TopToBottom` starts them in the top left and moves *downwards*, going to the top of a new column after reaching the final row.
 
 
 ## Displaying a Grid
