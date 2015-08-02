@@ -2,7 +2,7 @@
 
 This is a library for formatting strings in a grid layout, for a terminal - or anywhere that uses a fixed-width font.
 
-### [View the Rustdoc](http://bsago.me/doc/term_grid/)
+### [View the Rustdoc](http://ogham.rustdocs.org/term_grid/)
 
 ## Installation
 

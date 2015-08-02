@@ -3,7 +3,7 @@ name = "term_grid"
 description = "Library for formatting strings into a grid layout"
 
 authors = ["Ben S <ogham@bsago.me>"]
-documentation = "http://bsago.me/doc/term_grid/"
+documentation = "http://ogham.rustdocs.org/term_grid/"
 homepage = "https://github.com/ogham/rust-term-grid"
 license = "MIT"
 readme = "README.md"
