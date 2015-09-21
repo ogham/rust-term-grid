@@ -165,9 +165,9 @@ pub enum Filling {
 
 impl Filling {
     fn width(&self) -> Width {
-        match self {
-            &Filling::Spaces(w)  => w,
-            &Filling::Text(ref t)    => UnicodeWidthStr::width(&**t),
+        match *self {
+            Filling::Spaces(w)   => w,
+            Filling::Text(ref t) => UnicodeWidthStr::width(&t[..]),
         }
     }
 }
@@ -199,7 +199,7 @@ struct Dimensions {
 
 impl Dimensions {
     pub fn total_width(&self, separator_width: Width) -> Width {
-        sum(self.widths.iter().cloned()) + separator_width * (self.widths.len() - 1)
+        sum(self.widths.iter()) + separator_width * (self.widths.len() - 1)
     }
 }
 
@@ -243,13 +243,13 @@ impl Grid {
     ///
     /// Returns `None` if any of the cells has a width greater than the
     /// maximum width.
-    pub fn fit_into_width<'grid>(&'grid self, maximum_width: Width) -> Option<Display<'grid>> {
+    pub fn fit_into_width(&self, maximum_width: Width) -> Option<Display> {
         self.width_dimensions(maximum_width).map(|dims| Display { grid: &self, dimensions: dims })
     }
 
     /// Returns a displayable grid with the given number of columns, and no
     /// maximum width.
-    pub fn fit_into_columns<'grid>(&'grid self, num_columns: usize) -> Display<'grid> {
+    pub fn fit_into_columns(&self, num_columns: usize) -> Display {
         Display { grid: &self, dimensions: self.columns_dimensions(num_columns) }
     }
 
@@ -311,20 +311,25 @@ impl Grid {
             let adjusted_width = maximum_width - total_separator_width;
 
             let potential_dimensions = self.column_widths(num_lines, num_columns);
-            if sum(potential_dimensions.widths.iter().map(|&x| x)) < adjusted_width {
+            if sum(potential_dimensions.widths.iter()) < adjusted_width {
                 return Some(potential_dimensions);
             }
         }
 
         // If you get here you have really wide cells.
-        return None;
+        None
     }
 }
+
 
 /// A displayable representation of a Grid.
 #[derive(PartialEq, Debug)]
 pub struct Display<'grid> {
+
+    /// The grid to display.
     grid: &'grid Grid,
+
+    /// The pre-computed column widths for this grid.
     dimensions: Dimensions,
 }
 
@@ -353,8 +358,8 @@ impl<'grid> fmt::Display for Display<'grid> {
         for y in 0 .. self.dimensions.num_lines {
             for x in 0 .. self.dimensions.widths.len() {
                 let num = match self.grid.options.direction {
-                    Direction::LeftToRight   => y * self.dimensions.widths.len() + x,
-                    Direction::TopToBottom   => y + self.dimensions.num_lines * x,
+                    Direction::LeftToRight  => y * self.dimensions.widths.len() + x,
+                    Direction::TopToBottom  => y + self.dimensions.num_lines * x,
                 };
 
                 // Abandon a line mid-way through if that's where the cells end
@@ -370,14 +375,14 @@ impl<'grid> fmt::Display for Display<'grid> {
                 else {
                     assert!(self.dimensions.widths[x] >= cell.width);
                     match &self.grid.options.filling {
-                        &Filling::Spaces(n)  => {
+                        &Filling::Spaces(n) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width + n;
                             try!(write!(f, "{}", pad_string(&cell.contents, extra_spaces)));
-                        }
-                        &Filling::Text(ref t)    => {
+                        },
+                        &Filling::Text(ref t) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width;
                             try!(write!(f, "{}{}", pad_string(&cell.contents, extra_spaces), t));
-                        }
+                        },
                     }
                 }
             }
@@ -404,6 +409,6 @@ fn pad_string(string: &str, padding: usize) -> String {
 
 // TODO: This function can be replaced with `Iterator#sum` once the
 // `iter_arith` feature flag cools down.
-fn sum<I: Iterator<Item=Width>>(iterator: I) -> Width {
+fn sum<'a, I: Iterator<Item=&'a Width>>(iterator: I) -> Width {
     iterator.fold(0, |s, e| s + e)
 }
