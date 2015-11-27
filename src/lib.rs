@@ -6,8 +6,6 @@
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
 
-//! ## Introduction
-//!
 //! This library arranges textual data in a grid format suitable for
 //! fixed-width fonts, using an algorithm to minimise the amount of space
 //! needed. For example:
@@ -37,7 +35,7 @@
 //! ```
 //!
 //!
-//! ## Creating a Grid
+//! ## Creating a grid
 //!
 //! To add data to a grid, first create a new `Grid` object, and then add
 //! cells to them with the `add` method.
@@ -49,15 +47,15 @@
 //!    spaces, or a text string;
 //! - `direction`, which specifies whether the cells should go along
 //!    rows, or columns:
-//!   - `Direction::LeftToRight` starts them in the top left and
-//!      moves *rightwards*, going to the start of a new row after reaching the
-//!      final column;
-//!   - `Direction::TopToBottom` starts them in the top left and moves
-//!      *downwards*, going to the top of a new column after reaching the final
-//!      row.
+//!     - `Direction::LeftToRight` starts them in the top left and
+//!        moves *rightwards*, going to the start of a new row after reaching the
+//!        final column;
+//!     - `Direction::TopToBottom` starts them in the top left and moves
+//!        *downwards*, going to the top of a new column after reaching the final
+//!        row.
 //!
 //!
-//! ## Displaying a Grid
+//! ## Displaying a grid
 //!
 //! When display a grid, you can either specify the number of columns in advance,
 //! or try to find the maximum number of columns that can fit in an area of a
@@ -76,12 +74,12 @@
 //! cells with one per line.
 //!
 //!
-//! ## Cells and Data
+//! ## Cells and data
 //!
 //! Grids to not take `String`s or `&str`s - they take `Cells`.
 //!
-//! A **Cell** is a struct containing an individual cell's contents, as a string,
-//! and its pre-computed length, which gets used when calculating a grid's final
+//! A **Cell** is a struct containing an individual cell’s contents, as a string,
+//! and its pre-computed length, which gets used when calculating a grid’s final
 //! dimensions. Usually, you want the *Unicode width* of the string to be used for
 //! this, so you can turn a `String` into a `Cell` with the `.into()` method.
 //!
@@ -90,6 +88,7 @@
 //! over terminal control characters. For cases like these, the fields on the
 //! `Cell` objects are public, meaning you can construct your own instances as
 //! necessary.
+
 
 use std::cmp::max;
 use std::convert;
@@ -209,11 +208,7 @@ impl Dimensions {
 /// For more information, see the module-level documentation.
 #[derive(PartialEq, Debug)]
 pub struct Grid {
-
-    /// Options used in constructing the grid.
     options: GridOptions,
-
-    /// Vector of cells
     cells: Vec<Cell>,
 }
 
