@@ -123,8 +123,8 @@ impl convert::From<String> for Cell {
     }
 }
 
-impl<'_> convert::From<&'_ str> for Cell {
-    fn from(string: &'_ str) -> Self {
+impl<'a> convert::From<&'a str> for Cell {
+    fn from(string: &'a str) -> Self {
         Cell {
             width: UnicodeWidthStr::width(&*string),
             contents: string.into(),

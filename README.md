@@ -2,7 +2,7 @@
 
 This library arranges textual data in a grid format suitable for fixed-width fonts, using an algorithm to minimise the amount of space needed.
 
-### [View the Rustdoc](http://ogham.rustdocs.org/term_grid)
+### [View the Rustdoc](https://docs.rs/term_grid)
 
 
 # Installation
@@ -11,7 +11,7 @@ This crate works with [Cargo](http://crates.io). Add the following to your `Carg
 
 ```toml
 [dependencies]
-term_grid = "0.1.3"
+term_grid = "0.1"
 ```
 
 
