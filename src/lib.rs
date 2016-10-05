@@ -198,7 +198,14 @@ struct Dimensions {
 
 impl Dimensions {
     pub fn total_width(&self, separator_width: Width) -> Width {
-        self.widths.iter().sum::<Width>() + separator_width * (self.widths.len() - 1)
+        if self.widths.is_empty() {
+            0
+        }
+        else {
+            let values = self.widths.iter().sum::<Width>();
+            let separators = separator_width * (self.widths.len() - 1);
+            values + separators
+        }
     }
 }
 
@@ -239,13 +246,20 @@ impl Grid {
     /// Returns `None` if any of the cells has a width greater than the
     /// maximum width.
     pub fn fit_into_width(&self, maximum_width: Width) -> Option<Display> {
-        self.width_dimensions(maximum_width).map(|dims| Display { grid: &self, dimensions: dims })
+        self.width_dimensions(maximum_width)
+            .map(|dims| Display {
+                grid: &self,
+                dimensions: dims,
+            })
     }
 
     /// Returns a displayable grid with the given number of columns, and no
     /// maximum width.
     pub fn fit_into_columns(&self, num_columns: usize) -> Display {
-        Display { grid: &self, dimensions: self.columns_dimensions(num_columns) }
+        Display {
+            grid: &self,
+            dimensions: self.columns_dimensions(num_columns),
+        }
     }
 
     fn columns_dimensions(&self, num_columns: usize) -> Dimensions {
@@ -279,6 +293,21 @@ impl Grid {
         // surely not *all* of the numbers of lines are worth searching through!
 
         let cell_count = self.cells.len();
+
+        if cell_count == 0 {
+            return Some(Dimensions { num_lines: 0, widths: Vec::new() });
+        }
+
+        if cell_count == 1 {
+            let the_cell = &self.cells[0];
+
+            if the_cell.width <= maximum_width {
+                return Some(Dimensions { num_lines: 1, widths: vec![ the_cell.width ] });
+            }
+            else {
+                return None;
+            }
+        }
 
         // Instead of numbers of columns, try to find the fewest number of *lines*
         // that the output will fit in.
@@ -385,7 +414,7 @@ impl<'grid> fmt::Display for Display<'grid> {
         }
 
         Ok(())
-	}
+    }
 }
 
 
@@ -400,4 +429,166 @@ fn spaces(length: usize) -> String {
 /// of spaces to add.
 fn pad_string(string: &str, padding: usize) -> String {
     format!("{}{}", string, spaces(padding))
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn no_items() {
+        let grid = Grid::new(GridOptions {
+            direction:  Direction::TopToBottom,
+            filling:    Filling::Spaces(2),
+        });
+
+        let display = grid.fit_into_width(40).unwrap();
+
+        assert_eq!(display.dimensions.num_lines, 0);
+        assert!(display.dimensions.widths.is_empty());
+
+        assert_eq!(display.width(), 0);
+    }
+
+    #[test]
+    fn one_item() {
+        let mut grid = Grid::new(GridOptions {
+            direction:  Direction::TopToBottom,
+            filling:    Filling::Spaces(2),
+        });
+
+        grid.add(Cell::from("1"));
+
+        let display = grid.fit_into_width(40).unwrap();
+
+        assert_eq!(display.dimensions.num_lines, 1);
+        assert_eq!(display.dimensions.widths, vec![ 1 ]);
+
+        assert_eq!(display.width(), 1);
+    }
+
+    #[test]
+    fn one_item_exact_width() {
+        let mut grid = Grid::new(GridOptions {
+            direction:  Direction::TopToBottom,
+            filling:    Filling::Spaces(2),
+        });
+
+        grid.add(Cell::from("1234567890"));
+
+        let display = grid.fit_into_width(10).unwrap();
+
+        assert_eq!(display.dimensions.num_lines, 1);
+        assert_eq!(display.dimensions.widths, vec![ 10 ]);
+
+        assert_eq!(display.width(), 10);
+    }
+
+    #[test]
+    fn one_item_just_over() {
+        let mut grid = Grid::new(GridOptions {
+            direction:  Direction::TopToBottom,
+            filling:    Filling::Spaces(2),
+        });
+
+        grid.add(Cell::from("1234567890!"));
+
+        assert_eq!(grid.fit_into_width(10), None);
+    }
+
+    #[test]
+    fn two_small_items() {
+        let mut grid = Grid::new(GridOptions {
+            direction:  Direction::TopToBottom,
+            filling:    Filling::Spaces(2),
+        });
+
+        grid.add(Cell::from("1"));
+        grid.add(Cell::from("2"));
+
+        let display = grid.fit_into_width(40).unwrap();
+
+        assert_eq!(display.dimensions.num_lines, 1);
+        assert_eq!(display.dimensions.widths, vec![ 1, 1 ]);
+
+        assert_eq!(display.width(), 1 + 2 + 1);
+    }
+
+    #[test]
+    fn two_medium_size_items() {
+        let mut grid = Grid::new(GridOptions {
+            direction:  Direction::TopToBottom,
+            filling:    Filling::Spaces(2),
+        });
+
+        grid.add(Cell::from("hello there"));
+        grid.add(Cell::from("how are you today?"));
+
+        let display = grid.fit_into_width(40).unwrap();
+
+        assert_eq!(display.dimensions.num_lines, 1);
+        assert_eq!(display.dimensions.widths, vec![ 11, 18 ]);
+
+        assert_eq!(display.width(), 11 + 2 + 18);
+    }
+
+    #[test]
+    fn two_big_items() {
+        let mut grid = Grid::new(GridOptions {
+            direction:  Direction::TopToBottom,
+            filling:    Filling::Spaces(2),
+        });
+
+        grid.add(Cell::from("nuihuneihsoenhisenouiuteinhdauisdonhuisudoiosadiuohnteihaosdinhteuieudi"));
+        grid.add(Cell::from("oudisnuthasuouneohbueobaugceoduhbsauglcobeuhnaeouosbubaoecgueoubeohubeo"));
+
+        assert_eq!(grid.fit_into_width(40), None);
+    }
+
+    #[test]
+    fn that_example_from_earlier() {
+        let mut grid = Grid::new(GridOptions {
+            filling:    Filling::Spaces(1),
+            direction:  Direction::LeftToRight,
+        });
+
+        for s in vec!["one", "two", "three", "four", "five", "six", "seven",
+                      "eight", "nine", "ten", "eleven", "twelve"] {
+            grid.add(Cell::from(s));
+        }
+
+        let bits = "one  two three  four\nfive six seven  eight\nnine ten eleven twelve\n";
+        assert_eq!(grid.fit_into_width(24).unwrap().to_string(), bits);
+    }
+
+    #[test]
+    fn huge_separator() {
+        let mut grid = Grid::new(GridOptions {
+            filling:    Filling::Spaces(100),
+            direction:  Direction::LeftToRight,
+        });
+
+        grid.add("a".into());
+        grid.add("b".into());
+
+        assert_eq!(grid.fit_into_width(99), None);
+    }
+
+    #[test]
+    fn huge_yet_unused_separator() {
+        let mut grid = Grid::new(GridOptions {
+            filling:    Filling::Spaces(100),
+            direction:  Direction::LeftToRight,
+        });
+
+        grid.add("abcd".into());
+
+        let display = grid.fit_into_width(99).unwrap();
+
+        assert_eq!(display.dimensions.num_lines, 1);
+        assert_eq!(display.dimensions.widths, vec![ 4 ]);
+
+        assert_eq!(display.width(), 4);
+    }
 }

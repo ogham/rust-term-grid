@@ -7,7 +7,7 @@ documentation = "https://docs.rs/term_grid/"
 homepage = "https://github.com/ogham/rust-term-grid"
 license = "MIT"
 readme = "README.md"
-version = "0.1.4"
+version = "0.1.5"
 
 [lib]
 name = "term_grid"
