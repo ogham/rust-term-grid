@@ -198,7 +198,7 @@ struct Dimensions {
 
 impl Dimensions {
     pub fn total_width(&self, separator_width: Width) -> Width {
-        sum(self.widths.iter()) + separator_width * (self.widths.len() - 1)
+        self.widths.iter().sum::<Width>() + separator_width * (self.widths.len() - 1)
     }
 }
 
@@ -306,7 +306,7 @@ impl Grid {
             let adjusted_width = maximum_width - total_separator_width;
 
             let potential_dimensions = self.column_widths(num_lines, num_columns);
-            if sum(potential_dimensions.widths.iter()) < adjusted_width {
+            if potential_dimensions.widths.iter().sum::<Width>() < adjusted_width {
                 return Some(potential_dimensions);
             }
         }
@@ -400,10 +400,4 @@ fn spaces(length: usize) -> String {
 /// of spaces to add.
 fn pad_string(string: &str, padding: usize) -> String {
     format!("{}{}", string, spaces(padding))
-}
-
-// TODO: This function can be replaced with `Iterator#sum` once the
-// `iter_arith` feature flag cools down.
-fn sum<'a, I: Iterator<Item=&'a Width>>(iterator: I) -> Width {
-    iterator.fold(0, |s, e| s + e)
 }
