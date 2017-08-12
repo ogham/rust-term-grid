@@ -365,6 +365,11 @@ impl<'grid> Display<'grid> {
         self.dimensions.total_width(self.grid.options.filling.width())
     }
 
+    /// Returns how many rows this display takes up.
+    pub fn row_count(&self) -> usize {
+        self.dimensions.num_lines
+    }
+
     /// Returns whether this display takes up as many columns as were allotted
     /// to it.
     ///
@@ -560,6 +565,7 @@ mod test {
 
         let bits = "one  two three  four\nfive six seven  eight\nnine ten eleven twelve\n";
         assert_eq!(grid.fit_into_width(24).unwrap().to_string(), bits);
+        assert_eq!(grid.fit_into_width(24).unwrap().row_count(), 3);
     }
 
     #[test]
