@@ -22,29 +22,23 @@ For example:
 
 ```rust
 use term_grid::{Grid, GridOptions, Direction, Filling};
-```
 
-```rust
 let mut grid = Grid::new(GridOptions {
     filling:     Filling::Spaces(1),
     direction:   Direction::LeftToRight,
 });
-```
 
-```rust
 for s in vec!["one", "two", "three", "four", "five", "six", "seven",
               "eight", "nine", "ten", "eleven", "twelve"] {
     grid.add(s.into());
 }
-```
 
-```rust
 println!("{}", grid.fit_into_width(24).unwrap());
 ```
 
 Produces the following tabular result:
 
-```rust
+```
 one  two three  four
 five six seven  eight
 nine ten eleven twelve
