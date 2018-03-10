@@ -22,29 +22,23 @@ For example:
 
 ```rust
 use term_grid::{Grid, GridOptions, Direction, Filling};
-```
 
-```rust
 let mut grid = Grid::new(GridOptions {
     filling:     Filling::Spaces(1),
     direction:   Direction::LeftToRight,
 });
-```
 
-```rust
 for s in vec!["one", "two", "three", "four", "five", "six", "seven",
               "eight", "nine", "ten", "eleven", "twelve"] {
     grid.add(s.into());
 }
-```
 
-```rust
 println!("{}", grid.fit_into_width(24).unwrap());
 ```
 
 Produces the following tabular result:
 
-```rust
+```
 one  two three  four
 five six seven  eight
 nine ten eleven twelve
@@ -79,7 +73,7 @@ If this is the case, your best bet is to just output the cells with one per line
 
 ## Cells and data
 
-Grids to not take `String`s or `&str`s - they take `Cells`.
+Grids do not take `String`s or `&str`s - they take `Cells`.
 
 A **Cell** is a struct containing an individual cell’s contents, as a string, and its pre-computed length, which gets used when calculating a grid’s final dimensions.
 Usually, you want the *Unicode width* of the string to be used for this, so you can turn a `String` into a `Cell` with the `.into()` method.

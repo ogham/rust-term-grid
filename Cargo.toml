@@ -4,7 +4,7 @@ description = "Library for formatting strings into a grid layout"
 
 authors = ["Ben S <ogham@bsago.me>"]
 documentation = "https://docs.rs/term_grid/"
-homepage = "https://github.com/ogham/rust-term-grid"
+repository = "https://github.com/ogham/rust-term-grid"
 license = "MIT"
 readme = "README.md"
 version = "0.1.6"
