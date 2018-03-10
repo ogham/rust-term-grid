@@ -47,9 +47,9 @@ nine ten eleven twelve
 
 ## Creating a grid
 
-To add data to a grid, first create a new `Grid` object, and then add cells to them with the `add` method.
+To add data to a grid, first create a new `Grid` value, and then add cells to them with the `add` method.
 
-There are two options that must be specified in the `GridOptions` object that dictate how the grid is formatted:
+There are two options that must be specified in the `GridOptions` value that dictate how the grid is formatted:
 
 - `filling`: what to put in between two columns - either a number of spaces, or a text string;
 - `direction`, which specifies whether the cells should go along rows, or columns:
@@ -79,4 +79,4 @@ A **Cell** is a struct containing an individual cell’s contents, as a string, 
 Usually, you want the *Unicode width* of the string to be used for this, so you can turn a `String` into a `Cell` with the `.into()` method.
 
 However, you may also want to supply your own width: when you already know the width in advance, or when you want to change the measurement, such as skipping over terminal control characters.
-For cases like these, the fields on the `Cell` objects are public, meaning you can construct your own instances as necessary.
+For cases like these, the fields on the `Cell` values are public, meaning you can construct your own instances as necessary.

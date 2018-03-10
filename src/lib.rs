@@ -37,10 +37,10 @@
 //!
 //! ## Creating a grid
 //!
-//! To add data to a grid, first create a new `Grid` object, and then add
+//! To add data to a grid, first create a new `Grid` value, and then add
 //! cells to them with the `add` method.
 //!
-//! There are two options that must be specified in the `GridOptions` object
+//! There are two options that must be specified in the `GridOptions` value
 //! that dictate how the grid is formatted:
 //!
 //! - `filling`: what to put in between two columns - either a number of
@@ -86,7 +86,7 @@
 //! However, you may also want to supply your own width: when you already know the
 //! width in advance, or when you want to change the measurement, such as skipping
 //! over terminal control characters. For cases like these, the fields on the
-//! `Cell` objects are public, meaning you can construct your own instances as
+//! `Cell` values are public, meaning you can construct your own instances as
 //! necessary.
 
 
