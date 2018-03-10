@@ -229,10 +229,8 @@ impl Grid {
 
     /// Creates a new grid view with the given options.
     pub fn new(options: GridOptions) -> Grid {
-        Grid {
-            options: options,
-            cells: Vec::new(),
-        }
+        let cells = Vec::new();
+        Grid { options, cells }
     }
 
     /// Reserves space in the vector for the given number of additional cells
@@ -254,7 +252,7 @@ impl Grid {
     pub fn fit_into_width(&self, maximum_width: Width) -> Option<Display> {
         self.width_dimensions(maximum_width)
             .map(|dims| Display {
-                grid: &self,
+                grid:       self,
                 dimensions: dims,
             })
     }
@@ -263,7 +261,7 @@ impl Grid {
     /// maximum width.
     pub fn fit_into_columns(&self, num_columns: usize) -> Display {
         Display {
-            grid: &self,
+            grid:       self,
             dimensions: self.columns_dimensions(num_columns),
         }
     }
@@ -278,19 +276,16 @@ impl Grid {
     }
 
     fn column_widths(&self, num_lines: usize, num_columns: usize) -> Dimensions {
-        let mut column_widths: Vec<Width> = repeat(0).take(num_columns).collect();
+        let mut widths: Vec<Width> = repeat(0).take(num_columns).collect();
         for (index, cell) in self.cells.iter().enumerate() {
             let index = match self.options.direction {
                 Direction::LeftToRight  => index % num_columns,
                 Direction::TopToBottom  => index / num_lines,
             };
-            column_widths[index] = max(column_widths[index], cell.width);
+            widths[index] = max(widths[index], cell.width);
         }
 
-        Dimensions {
-            num_lines: num_lines,
-            widths: column_widths,
-        }
+        Dimensions { num_lines, widths }
     }
 
     fn width_dimensions(&self, maximum_width: Width) -> Option<Dimensions> {
@@ -402,19 +397,19 @@ impl<'grid> fmt::Display for Display<'grid> {
                     continue;
                 }
 
-                let ref cell = self.grid.cells[num];
+                let cell = &self.grid.cells[num];
                 if x == self.dimensions.widths.len() - 1 {
                     // The final column doesn't need to have trailing spaces
                     try!(write!(f, "{}", cell.contents));
                 }
                 else {
                     assert!(self.dimensions.widths[x] >= cell.width);
-                    match &self.grid.options.filling {
-                        &Filling::Spaces(n) => {
+                    match self.grid.options.filling {
+                        Filling::Spaces(n) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width + n;
                             try!(write!(f, "{}", pad_string(&cell.contents, extra_spaces)));
                         },
-                        &Filling::Text(ref t) => {
+                        Filling::Text(ref t) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width;
                             try!(write!(f, "{}{}", pad_string(&cell.contents, extra_spaces), t));
                         },
