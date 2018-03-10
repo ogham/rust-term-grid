@@ -2,9 +2,15 @@
 #![crate_type = "rlib"]
 #![crate_type = "dylib"]
 
+#![deny(unsafe_code)]
+
 #![warn(missing_copy_implementations)]
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
+#![warn(trivial_numeric_casts)]
+#![warn(unreachable_pub)]
+#![warn(unused_results)]
+
 
 //! This library arranges textual data in a grid format suitable for
 //! fixed-width fonts, using an algorithm to minimise the amount of space
@@ -197,7 +203,7 @@ struct Dimensions {
 }
 
 impl Dimensions {
-    pub fn total_width(&self, separator_width: Width) -> Width {
+    fn total_width(&self, separator_width: Width) -> Width {
         if self.widths.is_empty() {
             0
         }
