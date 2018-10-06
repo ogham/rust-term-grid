@@ -1,6 +1,3 @@
-#![crate_name = "term_grid"]
-#![crate_type = "rlib"]
-#![crate_type = "dylib"]
 #![deny(unsafe_code)]
 #![warn(missing_copy_implementations)]
 #![warn(missing_debug_implementations)]

@@ -11,6 +11,7 @@ version = "0.1.7"
 
 [lib]
 name = "term_grid"
+crate-type = ["rlib", "dylib"]
 
 [dependencies]
 unicode-width = "0.1.3"
