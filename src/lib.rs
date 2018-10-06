@@ -90,9 +90,9 @@
 //! necessary.
 
 use std::cmp::max;
-use std::convert;
 use std::fmt;
 use std::iter::repeat;
+use std::ops::Deref;
 
 extern crate unicode_width;
 use unicode_width::UnicodeWidthStr;
@@ -111,20 +111,11 @@ pub struct Cell {
     pub width: Width,
 }
 
-impl convert::From<String> for Cell {
-    fn from(string: String) -> Self {
+impl<T: Deref<Target = str> + Into<String>> From<T> for Cell {
+    fn from(value: T) -> Self {
         Cell {
-            width: UnicodeWidthStr::width(&*string),
-            contents: string,
-        }
-    }
-}
-
-impl<'a> convert::From<&'a str> for Cell {
-    fn from(string: &'a str) -> Self {
-        Cell {
-            width: UnicodeWidthStr::width(&*string),
-            contents: string.into(),
+            width: UnicodeWidthStr::width(&*value),
+            contents: value.into(),
         }
     }
 }
@@ -185,15 +176,31 @@ struct Dimensions {
     widths: Vec<Width>,
 }
 
+impl Default for Dimensions {
+    fn default() -> Self {
+        Self {
+            num_lines: 0,
+            widths: vec![],
+        }
+    }
+}
+
 impl Dimensions {
+    fn for_cell(cell: &Cell) -> Self {
+        Self {
+            num_lines: 1,
+            widths: vec![cell.width],
+        }
+    }
+
     fn total_width(&self, separator_width: Width) -> Width {
         if self.widths.is_empty() {
-            0
-        } else {
-            let values = self.widths.iter().sum::<Width>();
-            let separators = separator_width * (self.widths.len() - 1);
-            values + separators
+            return 0;
         }
+
+        let values: Width = self.widths.iter().sum();
+        let separators = separator_width * (self.widths.len() - 1);
+        values + separators
     }
 }
 
@@ -209,8 +216,10 @@ pub struct Grid {
 impl Grid {
     /// Creates a new grid view with the given options.
     pub fn new(options: GridOptions) -> Grid {
-        let cells = Vec::new();
-        Grid { options, cells }
+        Grid {
+            options,
+            cells: vec![],
+        }
     }
 
     /// Reserves space in the vector for the given number of additional cells
@@ -271,60 +280,49 @@ impl Grid {
         // TODO: this function could almost certainly be optimised...
         // surely not *all* of the numbers of lines are worth searching through!
 
-        let cell_count = self.cells.len();
+        match self.cells.len() {
+            0 => Some(Dimensions::default()),
+            1 => {
+                let cell = &self.cells[0];
+                if cell.width > maximum_width {
+                    return None;
+                }
+                Some(Dimensions::for_cell(cell))
+            }
+            n_cells => {
+                // Instead of numbers of columns, try to find the fewest number of *lines*
+                // that the output will fit in.
+                for num_lines in 1..n_cells {
+                    // The number of columns is the number of cells divided by the number
+                    // of lines, *rounded up*.
+                    let mut num_columns = n_cells / num_lines;
+                    if n_cells % num_lines != 0 {
+                        num_columns += 1;
+                    }
 
-        if cell_count == 0 {
-            return Some(Dimensions {
-                num_lines: 0,
-                widths: Vec::new(),
-            });
-        }
+                    // Early abort: if there are so many columns that the width of the
+                    // *column separators* is bigger than the width of the screen, then
+                    // don't even try to tabulate it.
+                    //
+                    // This is actually a necessary check, because the width is stored as
+                    // a usize, and making it go negative makes it huge instead, but it
+                    // also serves as a speed-up.
+                    let total_separator_width = (num_columns - 1) * self.options.filling.width();
+                    if maximum_width < total_separator_width {
+                        continue;
+                    }
 
-        if cell_count == 1 {
-            let the_cell = &self.cells[0];
+                    // Remove the separator width from the available space.
+                    let adjusted_width = maximum_width - total_separator_width;
 
-            if the_cell.width <= maximum_width {
-                return Some(Dimensions {
-                    num_lines: 1,
-                    widths: vec![the_cell.width],
-                });
-            } else {
-                return None;
+                    let potential_dimensions = self.column_widths(num_lines, num_columns);
+                    if potential_dimensions.widths.iter().sum::<Width>() < adjusted_width {
+                        return Some(potential_dimensions);
+                    }
+                }
+                None
             }
         }
-
-        // Instead of numbers of columns, try to find the fewest number of *lines*
-        // that the output will fit in.
-        for num_lines in 1..cell_count {
-            // The number of columns is the number of cells divided by the number
-            // of lines, *rounded up*.
-            let mut num_columns = cell_count / num_lines;
-            if cell_count % num_lines != 0 {
-                num_columns += 1;
-            }
-
-            // Early abort: if there are so many columns that the width of the
-            // *column separators* is bigger than the width of the screen, then
-            // don't even try to tabulate it.
-            // This is actually a necessary check, because the width is stored as
-            // a usize, and making it go negative makes it huge instead, but it
-            // also serves as a speed-up.
-            let total_separator_width = (num_columns - 1) * self.options.filling.width();
-            if maximum_width < total_separator_width {
-                continue;
-            }
-
-            // Remove the separator width from the available space.
-            let adjusted_width = maximum_width - total_separator_width;
-
-            let potential_dimensions = self.column_widths(num_lines, num_columns);
-            if potential_dimensions.widths.iter().sum::<Width>() < adjusted_width {
-                return Some(potential_dimensions);
-            }
-        }
-
-        // If you get here you have really wide cells.
-        None
     }
 }
 
@@ -372,14 +370,14 @@ impl<'grid> fmt::Display for Display<'grid> {
                     Direction::TopToBottom => y + self.dimensions.num_lines * x,
                 };
 
-                // Abandon a line mid-way through if that's where the cells end
+                // Abandon a line mid-way through if that's where the cells end.
                 if num >= self.grid.cells.len() {
                     continue;
                 }
 
                 let cell = &self.grid.cells[num];
                 if x == self.dimensions.widths.len() - 1 {
-                    // The final column doesn't need to have trailing spaces
+                    // The final column doesn't need to have trailing spaces.
                     try!(write!(f, "{}", cell.contents));
                 } else {
                     assert!(self.dimensions.widths[x] >= cell.width);
@@ -402,7 +400,6 @@ impl<'grid> fmt::Display for Display<'grid> {
             }
             try!(write!(f, "\n"));
         }
-
         Ok(())
     }
 }
