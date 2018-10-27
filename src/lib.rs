@@ -98,6 +98,7 @@
 
 use std::cmp::max;
 use std::convert;
+use std::cmp::{Ord, Ordering};
 use std::fmt;
 use std::iter::repeat;
 
@@ -110,7 +111,7 @@ use unicode_width::UnicodeWidthStr;
 /// The easiest way to create a Cell is just by using `string.into()`, which
 /// uses the **unicode width** of the string (see the `unicode_width` crate).
 /// However, the fields are public, if you wish to provide your own length.
-#[derive(PartialEq, Debug)]
+#[derive(Debug, Clone)]
 pub struct Cell {
 
     /// The string to display when this cell gets rendered.
@@ -138,6 +139,25 @@ impl<'a> convert::From<&'a str> for Cell {
     }
 }
 
+impl Ord for Cell {
+    fn cmp(&self, other: &Cell) -> Ordering {
+        self.width.cmp(&other.width)
+    }
+}
+
+impl PartialOrd for Cell {
+    fn partial_cmp(&self, other: &Cell) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for Cell {
+    fn eq(&self, other: &Cell) -> bool {
+        self.width == other.width
+    }
+}
+
+impl Eq for Cell {}
 
 /// Direction cells should be written in - either across, or downwards.
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -223,6 +243,9 @@ impl Dimensions {
 pub struct Grid {
     options: GridOptions,
     cells: Vec<Cell>,
+    widest_cell_length: Width,
+    width_sum: Width,
+    cell_count: usize,
 }
 
 impl Grid {
@@ -230,7 +253,8 @@ impl Grid {
     /// Creates a new grid view with the given options.
     pub fn new(options: GridOptions) -> Grid {
         let cells = Vec::new();
-        Grid { options, cells }
+        Grid { options, cells, widest_cell_length: 0,
+               width_sum: 0, cell_count: 0 }
     }
 
     /// Reserves space in the vector for the given number of additional cells
@@ -241,6 +265,11 @@ impl Grid {
 
     /// Adds another cell onto the vector.
     pub fn add(&mut self, cell: Cell) {
+        if cell.width > self.widest_cell_length {
+            self.widest_cell_length = cell.width;
+        }
+        self.width_sum += cell.width;
+        self.cell_count += 1;
         self.cells.push(cell)
     }
 
@@ -288,36 +317,70 @@ impl Grid {
         Dimensions { num_lines, widths }
     }
 
+    fn theoretical_max_num_lines(&self, maximum_width: usize) -> usize {
+        // TODO: Make code readable / efficient.
+        let mut theoretical_min_num_cols = 0;
+        let mut col_total_width_so_far = 0;
+
+        let mut cells = self.cells.clone();
+        cells.sort_unstable_by(|a, b| b.cmp(a)); // Sort in reverse order
+
+        for cell in cells.iter() {
+            if cell.width + col_total_width_so_far <= maximum_width {
+                theoretical_min_num_cols += 1;
+                col_total_width_so_far += cell.width;
+            } else {
+                let mut theoretical_max_num_lines = self.cell_count / theoretical_min_num_cols;
+                if self.cell_count % theoretical_min_num_cols != 0 {
+                    theoretical_max_num_lines += 1;
+                }
+                return theoretical_max_num_lines;
+            }
+            col_total_width_so_far += self.options.filling.width()
+        }
+
+        // If we make it to this point, we have exhausted all cells before
+        // reaching the maximum width; the theoretical max number of lines
+        // needed to display all cells is 1.
+        return 1;
+    }
+
     fn width_dimensions(&self, maximum_width: Width) -> Option<Dimensions> {
+        if self.widest_cell_length > maximum_width {
+            // Largest cell is wider than maximum width; it is impossible to fit.
+            return None;
+        }
 
-        // TODO: this function could almost certainly be optimised...
-        // surely not *all* of the numbers of lines are worth searching through!
-
-        let cell_count = self.cells.len();
-
-        if cell_count == 0 {
+        if self.cell_count == 0 {
             return Some(Dimensions { num_lines: 0, widths: Vec::new() });
         }
 
-        if cell_count == 1 {
+        if self.cell_count == 1 {
             let the_cell = &self.cells[0];
-
-            if the_cell.width <= maximum_width {
-                return Some(Dimensions { num_lines: 1, widths: vec![ the_cell.width ] });
-            }
-            else {
-                return None;
-            }
+            return Some(Dimensions { num_lines: 1, widths: vec![ the_cell.width ] });
         }
 
+        let theoretical_max_num_lines = self.theoretical_max_num_lines(maximum_width);
+        if theoretical_max_num_lines == 1 {
+            // This if—statement is neccesary for the function to work correctly
+            // for small inputs.
+            return Some(Dimensions {
+                num_lines: 1,
+                // I clone self.cells twice. Once here, and once in
+                // self.theoretical_max_num_lines. Perhaps not the best for
+                // performance?
+                widths: self.cells.clone().into_iter().map(|cell| cell.width).collect()
+            });
+        }
         // Instead of numbers of columns, try to find the fewest number of *lines*
         // that the output will fit in.
-        for num_lines in 1 .. cell_count {
+        let mut smallest_dimensions_yet = None;
+        for num_lines in (1 .. theoretical_max_num_lines).rev() {
 
             // The number of columns is the number of cells divided by the number
             // of lines, *rounded up*.
-            let mut num_columns = cell_count / num_lines;
-            if cell_count % num_lines != 0 {
+            let mut num_columns = self.cell_count / num_lines;
+            if self.cell_count % num_lines != 0 {
                 num_columns += 1;
             }
 
@@ -337,14 +400,16 @@ impl Grid {
 
             let potential_dimensions = self.column_widths(num_lines, num_columns);
             if potential_dimensions.widths.iter().sum::<Width>() < adjusted_width {
-                return Some(potential_dimensions);
+                smallest_dimensions_yet = Some(potential_dimensions);
+            } else {
+                return smallest_dimensions_yet;
             }
         }
 
-        // If you get here you have really wide cells.
         None
     }
 }
+
 
 
 /// A displayable representation of a Grid.
