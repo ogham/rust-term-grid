@@ -14,4 +14,4 @@ edition = "2018"
 name = "term_grid"
 
 [dependencies]
-unicode-width = "0.1.3"
+unicode-width = "0.1.6"
