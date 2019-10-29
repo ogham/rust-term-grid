@@ -8,6 +8,7 @@ repository = "https://github.com/ogham/rust-term-grid"
 license = "MIT"
 readme = "README.md"
 version = "0.1.7"
+edition = "2018"
 
 [lib]
 name = "term_grid"
