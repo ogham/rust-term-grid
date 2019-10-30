@@ -101,6 +101,16 @@ use std::iter::repeat;
 extern crate unicode_width;
 use unicode_width::UnicodeWidthStr;
 
+/// Alignment indicate on which side the content should stick if some filling
+/// is required.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Alignment {
+    /// The content will stick to the left.
+    Left,
+    /// The content will stick to the right.
+    Right,
+}
+
 /// A **Cell** is the combination of a string and its pre-computed length.
 ///
 /// The easiest way to create a Cell is just by using `string.into()`, which
@@ -113,6 +123,9 @@ pub struct Cell {
 
     /// The pre-computed length of the string.
     pub width: Width,
+
+    /// The side (left/right) to align the content is some filling is required.
+    pub alignment: Alignment,
 }
 
 impl convert::From<String> for Cell {
@@ -120,6 +133,7 @@ impl convert::From<String> for Cell {
         Cell {
             width: UnicodeWidthStr::width(&*string),
             contents: string,
+            alignment: Alignment::Left,
         }
     }
 }
@@ -129,6 +143,7 @@ impl<'a> convert::From<&'a str> for Cell {
         Cell {
             width: UnicodeWidthStr::width(&*string),
             contents: string.into(),
+            alignment: Alignment::Left,
         }
     }
 }
@@ -466,11 +481,20 @@ impl<'grid> fmt::Display for Display<'grid> {
                     match self.grid.options.filling {
                         Filling::Spaces(n) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width + n;
-                            write!(f, "{}", pad_string(&cell.contents, extra_spaces))?;
+                            write!(
+                                f,
+                                "{}",
+                                pad_string(&cell.contents, extra_spaces, cell.alignment)
+                            )?;
                         }
                         Filling::Text(ref t) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width;
-                            write!(f, "{}{}", pad_string(&cell.contents, extra_spaces), t)?;
+                            write!(
+                                f,
+                                "{}{}",
+                                pad_string(&cell.contents, extra_spaces, cell.alignment),
+                                t
+                            )?;
                         }
                     }
                 }
@@ -491,8 +515,12 @@ fn spaces(length: usize) -> String {
 ///
 /// This doesn't take the width the string *should* be, rather the number
 /// of spaces to add.
-fn pad_string(string: &str, padding: usize) -> String {
-    format!("{}{}", string, spaces(padding))
+fn pad_string(string: &str, padding: usize, alignment: Alignment) -> String {
+    if alignment == Alignment::Left {
+        format!("{}{}", string, spaces(padding))
+    } else {
+        format!("{}{}", spaces(padding), string)
+    }
 }
 
 #[cfg(test)]
