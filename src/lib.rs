@@ -342,7 +342,7 @@ impl Grid {
         let mut cells = self.cells.clone();
         cells.sort_unstable_by(|a, b| b.cmp(a)); // Sort in reverse order
 
-        for cell in cells.iter() {
+        for cell in &cells {
             if cell.width + col_total_width_so_far <= maximum_width {
                 theoretical_min_num_cols += 1;
                 col_total_width_so_far += cell.width;
@@ -359,7 +359,7 @@ impl Grid {
         // If we make it to this point, we have exhausted all cells before
         // reaching the maximum width; the theoretical max number of lines
         // needed to display all cells is 1.
-        return 1;
+        1
     }
 
     fn width_dimensions(&self, maximum_width: Width) -> Option<Dimensions> {
@@ -499,7 +499,7 @@ impl<'grid> fmt::Display for Display<'grid> {
                 }
             }
 
-            write!(f, "\n")?;
+            writeln!(f)?;
         }
 
         Ok(())
