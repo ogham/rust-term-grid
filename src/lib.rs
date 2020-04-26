@@ -42,13 +42,13 @@
 //!
 //! ## Creating a grid
 //!
-//! To add data to a grid, first create a new `Grid` value, and then add
-//! cells to them with the `add` method.
+//! To add data to a grid, first create a new [`Grid`] value, and then add
+//! cells to them with the `add` function.
 //!
-//! There are two options that must be specified in the `GridOptions` value
+//! There are two options that must be specified in the [`GridOptions`] value
 //! that dictate how the grid is formatted:
 //!
-//! - `filling`: what to put in between two columns - either a number of
+//! - `filling`: what to put in between two columns — either a number of
 //!    spaces, or a text string;
 //! - `direction`, which specifies whether the cells should go along
 //!    rows, or columns:
@@ -66,14 +66,14 @@
 //! or try to find the maximum number of columns that can fit in an area of a
 //! given width.
 //!
-//! Splitting a series of cells into columns - or, in other words, starting a new
-//! row every *n* cells - is achieved with the `fit_into_columns` method on a
-//! `Grid` value. It takes as its argument the number of columns.
+//! Splitting a series of cells into columns — or, in other words, starting a new
+//! row every <var>n</var> cells — is achieved with the [`fit_into_columns`] function
+//! on a `Grid` value. It takes as its argument the number of columns.
 //!
 //! Trying to fit as much data onto one screen as possible is the main use case
 //! for specifying a maximum width instead. This is achieved with the
-//! `fit_into_width` method. It takes the maximum allowed width, including
-//! separators, as its argument. However, it returns an *optional* `Display`
+//! [`fit_into_width`] function. It takes the maximum allowed width, including
+//! separators, as its argument. However, it returns an *optional* [`Display`]
 //! value, depending on whether any of the cells actually had a width greater than
 //! the maximum width! If this is the case, your best bet is to just output the
 //! cells with one per line.
@@ -81,18 +81,25 @@
 //!
 //! ## Cells and data
 //!
-//! Grids to not take `String`s or `&str`s - they take `Cells`.
+//! Grids to not take `String`s or `&str`s — they take [`Cell`] values.
 //!
 //! A **Cell** is a struct containing an individual cell’s contents, as a string,
 //! and its pre-computed length, which gets used when calculating a grid’s final
 //! dimensions. Usually, you want the *Unicode width* of the string to be used for
-//! this, so you can turn a `String` into a `Cell` with the `.into()` method.
+//! this, so you can turn a `String` into a `Cell` with the `.into()` function.
 //!
 //! However, you may also want to supply your own width: when you already know the
 //! width in advance, or when you want to change the measurement, such as skipping
 //! over terminal control characters. For cases like these, the fields on the
 //! `Cell` values are public, meaning you can construct your own instances as
 //! necessary.
+//!
+//! [`Cell`]: ./struct.Cell.html
+//! [`Display`]: ./struct.Display.html
+//! [`Grid`]: ./struct.Grid.html
+//! [`fit_into_columns`]: ./struct.Grid.html#method.fit_into_columns
+//! [`fit_into_width`]: ./struct.Grid.html#method.fit_into_width
+//! [`GridOptions`]: ./struct.GridOptions.html
 
 
 use std::cmp::max;
@@ -109,8 +116,10 @@ use unicode_width::UnicodeWidthStr;
 /// is required.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Alignment {
+
     /// The content will stick to the left.
     Left,
+
     /// The content will stick to the right.
     Right,
 }
@@ -130,7 +139,7 @@ pub struct Cell {
     /// The pre-computed length of the string.
     pub width: Width,
 
-    /// The side (left/right) to align the content is some filling is required.
+    /// The side (left/right) to align the content if some filling is required.
     pub alignment: Alignment,
 }
 
@@ -174,16 +183,16 @@ impl PartialEq for Cell {
 
 impl Eq for Cell {}
 
-/// Direction cells should be written in - either across, or downwards.
+/// Direction cells should be written in — either across, or downwards.
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Direction {
 
     /// Starts at the top left and moves rightwards, going back to the first
-    /// column for a new row - like a typewriter.
+    /// column for a new row, like a typewriter.
     LeftToRight,
 
     /// Starts at the top left and moves downwards, going back to the first
-    /// row for a new column - like how `ls` lists files by default.
+    /// row for a new column, like how `ls` lists files by default.
     TopToBottom,
 }
 
@@ -193,13 +202,15 @@ pub type Width = usize;
 
 
 /// The text to put in between each pair of columns.
+/// This does not include any spaces used when aligning cells.
 #[derive(PartialEq, Debug)]
 pub enum Filling {
 
-    /// A certain number of spaces.
+    /// A certain number of spaces should be used as the separator.
     Spaces(Width),
 
-    /// The same string, every time.
+    /// An arbitrary string.
+    /// `"|"` is a common choice.
     Text(String),
 }
 
@@ -212,16 +223,16 @@ impl Filling {
     }
 }
 
-/// The user-assignable options for a grid view that should be passed into
-/// `Grid::new()`.
+/// The user-assignable options for a grid view that should be passed to
+/// [`Grid::new()`](struct.Grid.html#method.new).
 #[derive(PartialEq, Debug)]
 pub struct GridOptions {
 
-    /// Direction that the cells should be written in - either across, or
-    /// downwards.
+    /// The direction that the cells should be written in — either
+    /// across, or downwards.
     pub direction: Direction,
 
-    /// Number of spaces to put in between each column of cells.
+    /// The number of spaces to put in between each column of cells.
     pub filling: Filling,
 }
 
@@ -253,7 +264,7 @@ impl Dimensions {
 
 /// Everything needed to format the cells with the grid options.
 ///
-/// For more information, see the module-level documentation.
+/// For more information, see the [`term_grid` crate documentation](index.html).
 #[derive(PartialEq, Debug)]
 pub struct Grid {
     options: GridOptions,
@@ -273,7 +284,7 @@ impl Grid {
     }
 
     /// Reserves space in the vector for the given number of additional cells
-    /// to be added. (See `vec#reserve`)
+    /// to be added. (See the `Vec::reserve` function.)
     pub fn reserve(&mut self, additional: usize) {
         self.cells.reserve(additional)
     }
@@ -288,7 +299,7 @@ impl Grid {
         self.cells.push(cell)
     }
 
-    /// Returns a displayable grid that's been packed to fit into the given
+    /// Returns a displayable grid that’s been packed to fit into the given
     /// width in the fewest number of rows.
     ///
     /// Returns `None` if any of the cells has a width greater than the
@@ -401,7 +412,7 @@ impl Grid {
 
             // Early abort: if there are so many columns that the width of the
             // *column separators* is bigger than the width of the screen, then
-            // don't even try to tabulate it.
+            // don’t even try to tabulate it.
             // This is actually a necessary check, because the width is stored as
             // a usize, and making it go negative makes it huge instead, but it
             // also serves as a speed-up.
@@ -426,8 +437,10 @@ impl Grid {
 }
 
 
-
-/// A displayable representation of a Grid.
+/// A displayable representation of a [`Grid`](struct.Grid.html).
+///
+/// This type implements `Display`, so you can get the textual version
+/// of the grid by calling `.to_string()`.
 #[derive(PartialEq, Debug)]
 pub struct Display<'grid> {
 
@@ -454,7 +467,7 @@ impl Display<'_> {
     /// Returns whether this display takes up as many columns as were allotted
     /// to it.
     ///
-    /// It's possible to construct tables that don't actually use up all the
+    /// It’s possible to construct tables that don’t actually use up all the
     /// columns that they could, such as when there are more columns than
     /// cells! In this case, a column would have a width of zero. This just
     /// checks for that.
@@ -472,14 +485,14 @@ impl fmt::Display for Display<'_> {
                     Direction::TopToBottom  => y + self.dimensions.num_lines * x,
                 };
 
-                // Abandon a line mid-way through if that's where the cells end
+                // Abandon a line mid-way through if that’s where the cells end
                 if num >= self.grid.cells.len() {
                     continue;
                 }
 
                 let cell = &self.grid.cells[num];
                 if x == self.dimensions.widths.len() - 1 {
-                    // The final column doesn't need to have trailing spaces
+                    // The final column doesn’t need to have trailing spaces
                     write!(f, "{}", cell.contents)?;
                 }
                 else {
@@ -512,7 +525,7 @@ fn spaces(length: usize) -> String {
 
 /// Pad a string with the given alignment and number of spaces.
 ///
-/// This doesn't take the width the string *should* be, rather the number
+/// This doesn’t take the width the string *should* be, rather the number
 /// of spaces to add.
 fn pad_string(string: &str, padding: usize, alignment: Alignment) -> String {
     if alignment == Alignment::Left {
@@ -652,6 +665,24 @@ mod test {
         }
 
         let bits = "one  two three  four\nfive six seven  eight\nnine ten eleven twelve\n";
+        assert_eq!(grid.fit_into_width(24).unwrap().to_string(), bits);
+        assert_eq!(grid.fit_into_width(24).unwrap().row_count(), 3);
+    }
+
+    #[test]
+    fn number_grid_with_pipe() {
+        let mut grid = Grid::new(GridOptions {
+            filling:    Filling::Text("|".into()),
+            direction:  Direction::LeftToRight,
+        });
+
+        for s in &["one", "two", "three", "four", "five", "six", "seven",
+                   "eight", "nine", "ten", "eleven", "twelve"]
+        {
+            grid.add(Cell::from(*s));
+        }
+
+        let bits = "one |two|three |four\nfive|six|seven |eight\nnine|ten|eleven|twelve\n";
         assert_eq!(grid.fit_into_width(24).unwrap().to_string(), bits);
         assert_eq!(grid.fit_into_width(24).unwrap().row_count(), 3);
     }
