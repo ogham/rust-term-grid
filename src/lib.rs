@@ -17,16 +17,17 @@
 //! needed. For example:
 //!
 //! ```rust
-//! use term_grid::{Grid, GridOptions, Direction, Filling};
+//! use term_grid::{Grid, GridOptions, Direction, Filling, Cell};
 //!
 //! let mut grid = Grid::new(GridOptions {
 //!     filling:    Filling::Spaces(1),
 //!     direction:  Direction::LeftToRight,
 //! });
 //!
-//! for s in vec!["one", "two", "three", "four", "five", "six", "seven",
-//!               "eight", "nine", "ten", "eleven", "twelve"] {
-//!     grid.add(s.into());
+//! for s in &["one", "two", "three", "four", "five", "six", "seven",
+//!            "eight", "nine", "ten", "eleven", "twelve"]
+//! {
+//!     grid.add(Cell::from(*s));
 //! }
 //!
 //! println!("{}", grid.fit_into_width(24).unwrap());
@@ -646,9 +647,10 @@ mod test {
             direction:  Direction::LeftToRight,
         });
 
-        for s in vec!["one", "two", "three", "four", "five", "six", "seven",
-                      "eight", "nine", "ten", "eleven", "twelve"] {
-            grid.add(Cell::from(s));
+        for s in &["one", "two", "three", "four", "five", "six", "seven",
+                   "eight", "nine", "ten", "eleven", "twelve"]
+        {
+            grid.add(Cell::from(*s));
         }
 
         let bits = "one  two three  four\nfive six seven  eight\nnine ten eleven twelve\n";
