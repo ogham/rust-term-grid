@@ -1,15 +1,13 @@
-#![crate_name = "term_grid"]
-#![crate_type = "rlib"]
-#![crate_type = "dylib"]
+#![warn(future_incompatible)]
+#![warn(missing_copy_implementations)]
+#![warn(missing_docs)]
+#![warn(nonstandard_style)]
+#![warn(rust_2018_compatibility)]
+#![warn(rust_2018_idioms)]
+#![warn(trivial_casts, trivial_numeric_casts)]
+#![warn(unused)]
 
 #![deny(unsafe_code)]
-
-#![warn(missing_copy_implementations)]
-#![warn(missing_debug_implementations)]
-#![warn(missing_docs)]
-#![warn(trivial_numeric_casts)]
-#![warn(unreachable_pub)]
-#![warn(unused_results)]
 
 
 //! This library arranges textual data in a grid format suitable for
@@ -295,7 +293,7 @@ impl Grid {
     ///
     /// Returns `None` if any of the cells has a width greater than the
     /// maximum width.
-    pub fn fit_into_width(&self, maximum_width: Width) -> Option<Display> {
+    pub fn fit_into_width(&self, maximum_width: Width) -> Option<Display<'_>> {
         self.width_dimensions(maximum_width)
             .map(|dims| Display {
                 grid:       self,
@@ -305,7 +303,7 @@ impl Grid {
 
     /// Returns a displayable grid with the given number of columns, and no
     /// maximum width.
-    pub fn fit_into_columns(&self, num_columns: usize) -> Display {
+    pub fn fit_into_columns(&self, num_columns: usize) -> Display<'_> {
         Display {
             grid:       self,
             dimensions: self.columns_dimensions(num_columns),
@@ -440,7 +438,7 @@ pub struct Display<'grid> {
     dimensions: Dimensions,
 }
 
-impl<'grid> Display<'grid> {
+impl Display<'_> {
 
     /// Returns how many columns this display takes up, based on the separator
     /// width and the number and width of the columns.
@@ -465,8 +463,8 @@ impl<'grid> Display<'grid> {
     }
 }
 
-impl<'grid> fmt::Display for Display<'grid> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+impl fmt::Display for Display<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         for y in 0 .. self.dimensions.num_lines {
             for x in 0 .. self.dimensions.widths.len() {
                 let num = match self.grid.options.direction {
