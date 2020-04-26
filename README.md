@@ -1,4 +1,4 @@
-# rust-term-grid [![term_grid on crates.io](http://meritbadge.herokuapp.com/term_grid)](https://crates.io/crates/term_grid) [![Build status](https://travis-ci.org/ogham/rust-term-grid.svg?branch=master)](https://travis-ci.org/ogham/rust-term-grid)
+# rust-term-grid [![term_grid on crates.io](https://meritbadge.herokuapp.com/term_grid)](https://crates.io/crates/term_grid) [![Build status](https://travis-ci.org/ogham/rust-term-grid.svg?branch=master)](https://travis-ci.org/ogham/rust-term-grid)
 
 This library arranges textual data in a grid format suitable for fixed-width fonts, using an algorithm to minimise the amount of space needed.
 
@@ -7,12 +7,14 @@ This library arranges textual data in a grid format suitable for fixed-width fon
 
 # Installation
 
-This crate works with [Cargo](http://crates.io). Add the following to your `Cargo.toml` dependencies section:
+This crate works with [Cargo](https://crates.io). Add the following to your `Cargo.toml` dependencies section:
 
 ```toml
 [dependencies]
 term_grid = "0.1"
 ```
+
+The earliest version of Rust that this crate is tested against is [Rust v1.31.0](https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018.html).
 
 
 ## Usage
@@ -21,16 +23,17 @@ This library arranges textual data in a grid format suitable for fixed-width fon
 For example:
 
 ```rust
-use term_grid::{Grid, GridOptions, Direction, Filling};
+use term_grid::{Grid, GridOptions, Direction, Filling, Cell};
 
 let mut grid = Grid::new(GridOptions {
     filling:     Filling::Spaces(1),
     direction:   Direction::LeftToRight,
 });
 
-for s in vec!["one", "two", "three", "four", "five", "six", "seven",
-              "eight", "nine", "ten", "eleven", "twelve"] {
-    grid.add(s.into());
+for s in &["one", "two", "three", "four", "five", "six", "seven",
+           "eight", "nine", "ten", "eleven", "twelve"]
+{
+    grid.add(Cell::from(*s));
 }
 
 println!("{}", grid.fit_into_width(24).unwrap());
