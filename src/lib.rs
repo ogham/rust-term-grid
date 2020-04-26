@@ -103,7 +103,6 @@
 
 
 use std::cmp::max;
-use std::convert;
 use std::fmt;
 use std::iter::repeat;
 
@@ -142,7 +141,7 @@ pub struct Cell {
     pub alignment: Alignment,
 }
 
-impl convert::From<String> for Cell {
+impl From<String> for Cell {
     fn from(string: String) -> Self {
         Self {
             width: UnicodeWidthStr::width(&*string),
@@ -152,7 +151,7 @@ impl convert::From<String> for Cell {
     }
 }
 
-impl<'a> convert::From<&'a str> for Cell {
+impl<'a> From<&'a str> for Cell {
     fn from(string: &'a str) -> Self {
         Self {
             width: UnicodeWidthStr::width(&*string),
