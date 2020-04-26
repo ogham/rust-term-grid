@@ -492,17 +492,31 @@ impl fmt::Display for Display<'_> {
 
                 let cell = &self.grid.cells[num];
                 if x == self.dimensions.widths.len() - 1 {
-                    // The final column doesn’t need to have trailing spaces
-                    write!(f, "{}", cell.contents)?;
+                    match cell.alignment {
+                        Alignment::Left => {
+                            // The final column doesn’t need to have trailing spaces,
+                            // as long as it’s left-aligned.
+                            write!(f, "{}", cell.contents)?;
+                        },
+                        Alignment::Right => {
+                            let extra_spaces = self.dimensions.widths[x] - cell.width;
+                            write!(f, "{}", pad_string(&cell.contents, extra_spaces, Alignment::Right))?;
+                        }
+                    }
                 }
                 else {
                     assert!(self.dimensions.widths[x] >= cell.width);
-                    match self.grid.options.filling {
-                        Filling::Spaces(n) => {
+                    match (&self.grid.options.filling, cell.alignment) {
+                        (Filling::Spaces(n), Alignment::Left) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width + n;
                             write!(f, "{}", pad_string(&cell.contents, extra_spaces, cell.alignment))?;
                         },
-                        Filling::Text(ref t) => {
+                        (Filling::Spaces(n), Alignment::Right) => {
+                            let s = spaces(*n);
+                            let extra_spaces = self.dimensions.widths[x] - cell.width;
+                            write!(f, "{}{}", pad_string(&cell.contents, extra_spaces, cell.alignment), s)?;
+                        },
+                        (Filling::Text(ref t), _) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width;
                             write!(f, "{}{}", pad_string(&cell.contents, extra_spaces, cell.alignment), t)?;
                         },
@@ -683,6 +697,46 @@ mod test {
         }
 
         let bits = "one |two|three |four\nfive|six|seven |eight\nnine|ten|eleven|twelve\n";
+        assert_eq!(grid.fit_into_width(24).unwrap().to_string(), bits);
+        assert_eq!(grid.fit_into_width(24).unwrap().row_count(), 3);
+    }
+
+    #[test]
+    fn numbers_right() {
+        let mut grid = Grid::new(GridOptions {
+            filling:    Filling::Spaces(1),
+            direction:  Direction::LeftToRight,
+        });
+
+        for s in &["one", "two", "three", "four", "five", "six", "seven",
+                   "eight", "nine", "ten", "eleven", "twelve"]
+        {
+            let mut cell = Cell::from(*s);
+            cell.alignment = Alignment::Right;
+            grid.add(cell);
+        }
+
+        let bits = " one two  three   four\nfive six  seven  eight\nnine ten eleven twelve\n";
+        assert_eq!(grid.fit_into_width(24).unwrap().to_string(), bits);
+        assert_eq!(grid.fit_into_width(24).unwrap().row_count(), 3);
+    }
+
+    #[test]
+    fn numbers_right_pipe() {
+        let mut grid = Grid::new(GridOptions {
+            filling:    Filling::Text("|".into()),
+            direction:  Direction::LeftToRight,
+        });
+
+        for s in &["one", "two", "three", "four", "five", "six", "seven",
+                   "eight", "nine", "ten", "eleven", "twelve"]
+        {
+            let mut cell = Cell::from(*s);
+            cell.alignment = Alignment::Right;
+            grid.add(cell);
+        }
+
+        let bits = " one|two| three|  four\nfive|six| seven| eight\nnine|ten|eleven|twelve\n";
         assert_eq!(grid.fit_into_width(24).unwrap().to_string(), bits);
         assert_eq!(grid.fit_into_width(24).unwrap().row_count(), 3);
     }
