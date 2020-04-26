@@ -104,7 +104,6 @@
 
 use std::cmp::max;
 use std::convert;
-use std::cmp::{Ord, Ordering};
 use std::fmt;
 use std::iter::repeat;
 
@@ -130,7 +129,7 @@ pub enum Alignment {
 /// The easiest way to create a Cell is just by using `string.into()`, which
 /// uses the **unicode width** of the string (see the `unicode_width` crate).
 /// However, the fields are public, if you wish to provide your own length.
-#[derive(Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Cell {
 
     /// The string to display when this cell gets rendered.
@@ -163,25 +162,6 @@ impl<'a> convert::From<&'a str> for Cell {
     }
 }
 
-impl Ord for Cell {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.width.cmp(&other.width)
-    }
-}
-
-impl PartialOrd for Cell {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for Cell {
-    fn eq(&self, other: &Self) -> bool {
-        self.width == other.width
-    }
-}
-
-impl Eq for Cell {}
 
 /// Direction cells should be written in — either across, or downwards.
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -349,7 +329,7 @@ impl Grid {
         let mut col_total_width_so_far = 0;
 
         let mut cells = self.cells.clone();
-        cells.sort_unstable_by(|a, b| b.cmp(a)); // Sort in reverse order
+        cells.sort_unstable_by(|a, b| b.width.cmp(&a.width)); // Sort in reverse order
 
         for cell in &cells {
             if cell.width + col_total_width_so_far <= maximum_width {
