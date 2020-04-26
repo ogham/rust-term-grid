@@ -138,7 +138,7 @@ pub struct Cell {
 
 impl convert::From<String> for Cell {
     fn from(string: String) -> Self {
-        Cell {
+        Self {
             width: UnicodeWidthStr::width(&*string),
             contents: string,
             alignment: Alignment::Left,
@@ -148,7 +148,7 @@ impl convert::From<String> for Cell {
 
 impl<'a> convert::From<&'a str> for Cell {
     fn from(string: &'a str) -> Self {
-        Cell {
+        Self {
             width: UnicodeWidthStr::width(&*string),
             contents: string.into(),
             alignment: Alignment::Left,
@@ -157,19 +157,19 @@ impl<'a> convert::From<&'a str> for Cell {
 }
 
 impl Ord for Cell {
-    fn cmp(&self, other: &Cell) -> Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         self.width.cmp(&other.width)
     }
 }
 
 impl PartialOrd for Cell {
-    fn partial_cmp(&self, other: &Cell) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl PartialEq for Cell {
-    fn eq(&self, other: &Cell) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.width == other.width
     }
 }
@@ -268,9 +268,9 @@ pub struct Grid {
 impl Grid {
 
     /// Creates a new grid view with the given options.
-    pub fn new(options: GridOptions) -> Grid {
+    pub fn new(options: GridOptions) -> Self {
         let cells = Vec::new();
-        Grid { options, cells, widest_cell_length: 0,
+        Self { options, cells, widest_cell_length: 0,
                width_sum: 0, cell_count: 0 }
     }
 
