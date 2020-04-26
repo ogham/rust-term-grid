@@ -11,7 +11,7 @@ This crate works with [Cargo](https://crates.io). Add the following to your `Car
 
 ```toml
 [dependencies]
-term_grid = "0.1"
+term_grid = "0.2"
 ```
 
 The earliest version of Rust that this crate is tested against is [Rust v1.31.0](https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018.html).

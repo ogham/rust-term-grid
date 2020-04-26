@@ -8,7 +8,7 @@ exclude = ["/README.md", "/LICENCE", "/.rustfmt.toml", "/.travis.yml"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/ogham/rust-term-grid"
-version = "0.1.7"
+version = "0.2.0"
 
 [lib]
 name = "term_grid"
