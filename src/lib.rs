@@ -481,23 +481,24 @@ impl<'grid> fmt::Display for Display<'grid> {
                 let cell = &self.grid.cells[num];
                 if x == self.dimensions.widths.len() - 1 {
                     // The final column doesn't need to have trailing spaces
-                    try!(write!(f, "{}", cell.contents));
+                    write!(f, "{}", cell.contents)?;
                 }
                 else {
                     assert!(self.dimensions.widths[x] >= cell.width);
                     match self.grid.options.filling {
                         Filling::Spaces(n) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width + n;
-                            try!(write!(f, "{}", pad_string(&cell.contents, extra_spaces, cell.alignment)));
+                            write!(f, "{}", pad_string(&cell.contents, extra_spaces, cell.alignment))?;
                         },
                         Filling::Text(ref t) => {
                             let extra_spaces = self.dimensions.widths[x] - cell.width;
-                            try!(write!(f, "{}{}", pad_string(&cell.contents, extra_spaces, cell.alignment), t));
+                            write!(f, "{}{}", pad_string(&cell.contents, extra_spaces, cell.alignment), t)?;
                         },
                     }
                 }
             }
-            try!(write!(f, "\n"));
+
+            write!(f, "\n")?;
         }
 
         Ok(())
