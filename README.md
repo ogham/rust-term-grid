@@ -1,4 +1,11 @@
-# rust-term-grid [![term_grid on crates.io](https://meritbadge.herokuapp.com/term_grid)](https://crates.io/crates/term_grid) [![Build status](https://travis-ci.org/ogham/rust-term-grid.svg?branch=master)](https://travis-ci.org/ogham/rust-term-grid)
+# rust-term-grid [![term-grid on crates.io][crates-badge]][crates-url] [![Minimum Rust Version 1.31.0][rustc-badge]][rustc-url] [![Build status][travis-badge]][travis-url]
+
+[crates-badge]: https://meritbadge.herokuapp.com/term-grid
+[crates-url]: https://crates.io/crates/term-grid
+[travis-badge]: https://travis-ci.org/ogham/rust-term-grid.svg?branch=master
+[travis-url]: https://travis-ci.org/github/ogham/rust-term-grid
+[rustc-badge]: https://img.shields.io/badge/rustc-1.31+-lightgray.svg
+[rustc-url]: https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018.html
 
 This library arranges textual data in a grid format suitable for fixed-width fonts, using an algorithm to minimise the amount of space needed.
 
@@ -14,7 +21,7 @@ This crate works with [Cargo](https://crates.io). Add the following to your `Car
 term_grid = "0.2"
 ```
 
-The earliest version of Rust that this crate is tested against is [Rust v1.31.0](https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018.html).
+The earliest version of Rust that this crate is tested against is [Rust v1.31.0][rustc-url].
 
 
 ## Usage
