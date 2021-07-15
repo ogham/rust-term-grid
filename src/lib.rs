@@ -380,7 +380,7 @@ impl Grid {
         // Instead of numbers of columns, try to find the fewest number of *lines*
         // that the output will fit in.
         let mut smallest_dimensions_yet = None;
-        for num_lines in (1 .. theoretical_max_num_lines).rev() {
+        for num_lines in (1..=theoretical_max_num_lines).rev() {
 
             // The number of columns is the number of cells divided by the number
             // of lines, *rounded up*.
