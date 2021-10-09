@@ -397,21 +397,31 @@ impl Grid {
             // also serves as a speed-up.
             let total_separator_width = (num_columns - 1) * self.options.filling.width();
             if maximum_width < total_separator_width {
-                continue;
+                return None;
             }
 
             // Remove the separator width from the available space.
-            let adjusted_width = maximum_width - total_separator_width;
+            let mut adjusted_width = maximum_width - total_separator_width;
+            let mut potential_dimensions = self.column_widths(num_lines, num_columns);
 
-            let potential_dimensions = self.column_widths(num_lines, num_columns);
-            if potential_dimensions.widths.iter().sum::<Width>() < adjusted_width {
+            while potential_dimensions.widths.iter().sum::<Width>() < adjusted_width {
                 smallest_dimensions_yet = Some(potential_dimensions);
-            } else {
-                return smallest_dimensions_yet;
+
+                if self.cell_count % num_lines != 0 {
+                    num_columns += 1;
+                    let total_separator_width = (num_columns - 1) * self.options.filling.width();
+                    if maximum_width < total_separator_width {
+                        break;
+                    }
+                    adjusted_width = maximum_width - total_separator_width;
+                    potential_dimensions = self.column_widths(num_lines, num_columns);
+                } else {
+                    break
+                }
             }
         }
 
-        None
+        smallest_dimensions_yet
     }
 }
 
