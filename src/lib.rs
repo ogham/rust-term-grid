@@ -365,6 +365,11 @@ impl Grid {
             return Some(Dimensions { num_lines: 1, widths: vec![ the_cell.width ] });
         }
 
+        if self.options.filling.width() > maximum_width {
+            // Filling is too large to separate even two elements with zero width
+            return None;
+        }
+
         let theoretical_max_num_lines = self.theoretical_max_num_lines(maximum_width);
         if theoretical_max_num_lines == 1 {
             // This if—statement is neccesary for the function to work correctly
@@ -380,14 +385,14 @@ impl Grid {
         // Instead of numbers of columns, try to find the fewest number of *lines*
         // that the output will fit in.
         let mut smallest_dimensions_yet = None;
-        for num_lines in (1 .. theoretical_max_num_lines).rev() {
-
+        for num_lines in (1 ..= theoretical_max_num_lines).rev() {
             // The number of columns is the number of cells divided by the number
             // of lines, *rounded up*.
-            let mut num_columns = self.cell_count / num_lines;
-            if self.cell_count % num_lines != 0 {
-                num_columns += 1;
-            }
+            let num_columns = if self.cell_count % num_lines == 0 {
+                self.cell_count / num_lines
+            } else {
+                self.cell_count / num_lines + 1
+            };
 
             // Early abort: if there are so many columns that the width of the
             // *column separators* is bigger than the width of the screen, then
@@ -405,13 +410,11 @@ impl Grid {
 
             let potential_dimensions = self.column_widths(num_lines, num_columns);
             if potential_dimensions.widths.iter().sum::<Width>() < adjusted_width {
-                smallest_dimensions_yet = Some(potential_dimensions);
-            } else {
-                return smallest_dimensions_yet;
+                return Some(potential_dimensions);
             }
         }
 
-        None
+        smallest_dimensions_yet
     }
 }
 
@@ -748,5 +751,23 @@ mod test {
         assert_eq!(display.dimensions.widths, vec![ 4 ]);
 
         assert_eq!(display.width(), 4);
+    }
+
+    #[test]
+    fn theoretical_is_effective_max_num_line() {
+        let mut grid = Grid::new(GridOptions {
+            filling:    Filling::Text("||".into()),
+            direction:  Direction::LeftToRight,
+        });
+
+        for s in &["test1", "test2", "test3", "test4", "test5", "test6", "test7",
+                   "test8", "test9", "test10", "test11"]
+        {
+            grid.add(Cell::from(*s));
+        }
+
+        let bits = "test1||test2||test3||test4 ||test5 ||test6\ntest7||test8||test9||test10||test11||\n";
+        assert_eq!(grid.fit_into_width(69).unwrap().to_string(), bits);
+        assert_eq!(grid.fit_into_width(69).unwrap().row_count(), 2);
     }
 }
