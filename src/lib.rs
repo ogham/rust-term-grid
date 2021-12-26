@@ -248,7 +248,8 @@ impl Dimensions {
 pub struct Grid {
     options: GridOptions,
     cells: Vec<Cell>,
-    widest_cell_length: Width,
+    widest_cell_width: Width,
+    narrowest_cell_width: Width,
     width_sum: Width,
     cell_count: usize,
 }
@@ -258,7 +259,8 @@ impl Grid {
     /// Creates a new grid view with the given options.
     pub fn new(options: GridOptions) -> Self {
         let cells = Vec::new();
-        Self { options, cells, widest_cell_length: 0,
+        Self { options, cells,
+               widest_cell_width: 0, narrowest_cell_width: usize::MAX,
                width_sum: 0, cell_count: 0 }
     }
 
@@ -270,8 +272,11 @@ impl Grid {
 
     /// Adds another cell onto the vector.
     pub fn add(&mut self, cell: Cell) {
-        if cell.width > self.widest_cell_length {
-            self.widest_cell_length = cell.width;
+        if cell.width > self.widest_cell_width {
+            self.widest_cell_width = cell.width;
+        }
+        if cell.width < self.narrowest_cell_width {
+            self.narrowest_cell_width = cell.width;
         }
         self.width_sum += cell.width;
         self.cell_count += 1;
@@ -322,36 +327,8 @@ impl Grid {
         Dimensions { num_lines, widths }
     }
 
-    fn theoretical_max_num_lines(&self, maximum_width: usize) -> usize {
-        // TODO: Make code readable / efficient.
-        let mut theoretical_min_num_cols = 0;
-        let mut col_total_width_so_far = 0;
-
-        let mut cells = self.cells.clone();
-        cells.sort_unstable_by(|a, b| b.width.cmp(&a.width)); // Sort in reverse order
-
-        for cell in &cells {
-            if cell.width + col_total_width_so_far <= maximum_width {
-                theoretical_min_num_cols += 1;
-                col_total_width_so_far += cell.width;
-            } else {
-                let mut theoretical_max_num_lines = self.cell_count / theoretical_min_num_cols;
-                if self.cell_count % theoretical_min_num_cols != 0 {
-                    theoretical_max_num_lines += 1;
-                }
-                return theoretical_max_num_lines;
-            }
-            col_total_width_so_far += self.options.filling.width()
-        }
-
-        // If we make it to this point, we have exhausted all cells before
-        // reaching the maximum width; the theoretical max number of lines
-        // needed to display all cells is 1.
-        1
-    }
-
     fn width_dimensions(&self, maximum_width: Width) -> Option<Dimensions> {
-        if self.widest_cell_length > maximum_width {
+        if self.widest_cell_width > maximum_width {
             // Largest cell is wider than maximum width; it is impossible to fit.
             return None;
         }
@@ -370,51 +347,29 @@ impl Grid {
             return None;
         }
 
-        let theoretical_max_num_lines = self.theoretical_max_num_lines(maximum_width);
-        if theoretical_max_num_lines == 1 {
-            // This if—statement is neccesary for the function to work correctly
-            // for small inputs.
-            return Some(Dimensions {
-                num_lines: 1,
-                // I clone self.cells twice. Once here, and once in
-                // self.theoretical_max_num_lines. Perhaps not the best for
-                // performance?
-                widths: self.cells.clone().into_iter().map(|cell| cell.width).collect()
-            });
-        }
-        // Instead of numbers of columns, try to find the fewest number of *lines*
-        // that the output will fit in.
-        let mut smallest_dimensions_yet = None;
-        for num_lines in (1 ..= theoretical_max_num_lines).rev() {
-            // The number of columns is the number of cells divided by the number
-            // of lines, *rounded up*.
-            let num_columns = if self.cell_count % num_lines == 0 {
-                self.cell_count / num_lines
-            } else {
-                self.cell_count / num_lines + 1
-            };
+        let max_column_count = self.theoretical_max_column_count(maximum_width);
+        for num_columns in (2..=max_column_count).rev() {
+            let potential_dimensions = self.columns_dimensions(num_columns);
 
-            // Early abort: if there are so many columns that the width of the
-            // *column separators* is bigger than the width of the screen, then
-            // don’t even try to tabulate it.
-            // This is actually a necessary check, because the width is stored as
-            // a usize, and making it go negative makes it huge instead, but it
-            // also serves as a speed-up.
             let total_separator_width = (num_columns - 1) * self.options.filling.width();
-            if maximum_width < total_separator_width {
-                continue;
-            }
-
-            // Remove the separator width from the available space.
             let adjusted_width = maximum_width - total_separator_width;
 
-            let potential_dimensions = self.column_widths(num_lines, num_columns);
             if potential_dimensions.widths.iter().sum::<Width>() < adjusted_width {
                 return Some(potential_dimensions);
             }
         }
 
-        smallest_dimensions_yet
+        Some(self.columns_dimensions(1))
+    }
+
+    fn theoretical_max_column_count(&self, maximum_width: Width) -> usize {
+        // Best case: every column is of narrowest width, except the column with the widest cell
+        let max_column_count = ((maximum_width - self.widest_cell_width) /
+            // let’s see how many filling + narrowest cells we can fit
+            (self.narrowest_cell_width + self.options.filling.width())
+        ) + 1;  // we add one since we substracted self.widest_cell_width at the beginning
+
+        return usize::min(max_column_count, self.cell_count);
     }
 }
 
@@ -766,7 +721,7 @@ mod test {
             grid.add(Cell::from(*s));
         }
 
-        let bits = "test1||test2||test3||test4 ||test5 ||test6\ntest7||test8||test9||test10||test11||\n";
+        let bits = "test1 ||test2 ||test3||test4||test5||test6||test7||test8||test9\ntest10||test11||\n";
         assert_eq!(grid.fit_into_width(69).unwrap().to_string(), bits);
         assert_eq!(grid.fit_into_width(69).unwrap().row_count(), 2);
     }
