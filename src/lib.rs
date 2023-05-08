@@ -296,7 +296,10 @@ impl Grid {
     pub fn fit_into_columns(&self, num_columns: usize) -> Display<'_> {
         Display {
             grid:       self,
-            dimensions: self.columns_dimensions(num_columns),
+            dimensions: match num_columns {
+                0 => self.columns_dimensions(1), //To force the execution to continue.
+                _ => self.columns_dimensions(num_columns)
+            }
         }
     }
 
